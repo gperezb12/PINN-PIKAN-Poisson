@@ -37,10 +37,11 @@ training:
   lambda_bc: 1
   lambda_data: 100
   lambda_pde: 1
-  plot_every: 5000
+  plot_every: 5
   plot_every_lbfgs: 500
+
 
 # Output configuration
 output:
   results_dir: 'results_kan'  # 'results' for pinn, 'results_kan' for pikan
-  conf_suffix: '(sufx)'  # Configuration identifier for filenames
+  conf_suffix: '(2,4)'  # Configuration identifier for filenames

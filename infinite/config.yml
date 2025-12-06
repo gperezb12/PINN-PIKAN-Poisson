@@ -37,7 +37,7 @@ training:
   lambda_bc: 1
   lambda_data: 100
   lambda_pde: 1
-  plot_every: 5000
+  plot_every: 5
   plot_every_lbfgs: 500
 
 # Output configuration

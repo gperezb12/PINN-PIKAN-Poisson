@@ -3,7 +3,13 @@ import numpy as np
 import seaborn as sns
 import os
 import torch
+import yaml 
+from typing import Dict, Any
 
+def load_config(config_path: str = 'config.yml') -> Dict[str, Any]:
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+    
 def plot_solution_and_k(modelU: torch.nn.Module, modelK: torch.nn.Module, epoch: int, folder: str = "figs_inverse_mixed", n_points: int = 250, device: str = 'cuda') -> None:
     """Plot solution u and diffusion coefficient k predictions.
     
@@ -29,18 +35,15 @@ def plot_solution_and_k(modelU: torch.nn.Module, modelK: torch.nn.Module, epoch:
         k_pred = modelK(XY_torch).cpu().numpy()
     u_pred = u_pred.reshape(n_points, n_points)
     k_pred = k_pred.reshape(n_points, n_points)
-    alpha = 0.5
-    beta = 10
-    epsilon = 0.5
 
-    u_true = np.exp(-alpha * (X_mesh**2 + Y_mesh**2)) * np.cos(beta * X_mesh)
-    k_true =  1 + 2 / (1 + np.exp(-(Y_mesh + 1.5) / epsilon))
+    cfg = load_config()
+    results_dir = cfg['output']['results_dir']
+    conf_suffix = cfg['output']['conf_suffix']
 
 
-    figU, axU = plot_styled_waves(X_mesh, Y_mesh, u_pred, title=f"u aproximation PINN  (Epoch {epoch})", saveas=f"figs(noise)/epoch_{epoch}/solution_u.pdf")
+    figU, axU = plot_styled_waves(X_mesh, Y_mesh, u_pred, title=f"u aproximation PINN  (Epoch {epoch})", saveas=f"{results_dir}/figs_{conf_suffix}/epoch_{epoch}/solution_u.pdf")
     # 2D plot for PINN u
-    figK, axK = plot_styled_k(X_mesh, Y_mesh, k_pred, title=f"k aproximation PINN  (Epoch {epoch})", saveas=f"figs(noise)/epoch_{epoch}/solution_k.pdf")
-    
+    figK, axK = plot_styled_k(X_mesh, Y_mesh, k_pred, title=f"k aproximation PINN  (Epoch {epoch})", saveas=f"{results_dir}/figs_{conf_suffix}/epoch_{epoch}/solution_k.pdf")
     """
     # 2D plot for PINN k
     ax3 = fig.add_subplot(2, 2, 3)
