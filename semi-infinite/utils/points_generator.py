@@ -5,7 +5,16 @@ import torch
 
 
 
-def generate_interior_data(N_data=100, device='cuda'):
+def generate_interior_data(N_data: int = 100, device: str = 'cuda') -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Generate interior data points with analytic solution values.
+    
+    Args:
+        N_data: Number of data points to generate
+        device: Device to place tensors on ('cuda' or 'cpu')
+    
+    Returns:
+        Tuple of (X_data, u_data, k_data) tensors
+    """
     x_data = np.random.normal(loc=0.0, scale=2.5, size=(N_data, 1))
     y_data = -np.random.exponential(scale=1.25, size=(N_data, 1))
     X_data_np = np.hstack((x_data, y_data))
@@ -31,17 +40,17 @@ def generate_interior_data(N_data=100, device='cuda'):
     
     return X_data, u_data, k_data
 
-def generate_collocation_points(N_interior=2000, N_boundary=200, std_dev=2.5, device = 'cuda'):
-    """
-    Genera puntos de entrenamiento: interior (para el residual de la PDE)
-    y frontera (para la condiciÃ³n de frontera u=0), en el dominio [-3,3]^2.
-
+def generate_collocation_points(N_interior: int = 2000, N_boundary: int = 200, std_dev: float = 2.5, device: str = 'cuda') -> tuple[torch.Tensor, torch.Tensor]:
+    """Generate collocation points for PDE residual and boundary conditions.
+    
     Args:
-        N_interior (int): NÃºmero de puntos interiores.
-        N_boundary (int): NÃºmero de puntos en la frontera (y=0).
-
+        N_interior: Number of interior collocation points
+        N_boundary: Number of boundary points at y=0
+        std_dev: Standard deviation for normal distribution sampling
+        device: Device to place tensors on ('cuda' or 'cpu')
+    
     Returns:
-        (X_int, X_bnd) en formato (torch.Tensor, torch.Tensor).
+        Tuple of (X_int, X_bnd) tensors for interior and boundary points
     """
     # Puntos interiores en [-3,3]x[-3,3]
     x_int = np.random.normal(loc=0.0, scale=2.5, size=(N_interior, 1))

@@ -78,6 +78,7 @@ if __name__ == "__main__":
         lr_lbfgs=0.1,
         lambda_bc=1,
         lambda_data=100,
+        lambda_pde=1,
         plot_every=1000,
         plot_every_lbfgs = 100
     )

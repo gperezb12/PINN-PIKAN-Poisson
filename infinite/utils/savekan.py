@@ -2,15 +2,36 @@
 import os
 import json
 import torch
-from typing import Dict, Any
+from typing import Dict, Any, Tuple, Callable
 
-def ensure_dir(path: str):
+def ensure_dir(path: str) -> None:
+    """Ensure directory exists, create if it doesn't.
+    
+    Args:
+        path: Directory path to create
+    """
     os.makedirs(path, exist_ok=True)
 
-def save_kan_checkpoint(model_u, model_k, cfg_u: Dict[str, Any], cfg_k: Dict[str, Any],
-                        losses: Dict[str, list], meta: Dict[str, Any], out_dir: str):
-    """
-    Guarda state_dicts + configuración + pérdidas/metadata en un solo checkpoint.
+def save_kan_checkpoint(model_u: torch.nn.Module, 
+                       model_k: torch.nn.Module, 
+                       cfg_u: Dict[str, Any], 
+                       cfg_k: Dict[str, Any],
+                       losses: Dict[str, list], 
+                       meta: Dict[str, Any], 
+                       out_dir: str) -> str:
+    """Save KAN models checkpoint with configuration and metadata.
+    
+    Args:
+        model_u: Neural network model for u
+        model_k: Neural network model for k
+        cfg_u: Configuration dictionary for model_u
+        cfg_k: Configuration dictionary for model_k
+        losses: Dictionary of loss histories
+        meta: Metadata dictionary
+        out_dir: Output directory path
+        
+    Returns:
+        Path to saved checkpoint file
     """
     ensure_dir(out_dir)
     ckpt_path = os.path.join(out_dir, "checkpoint_kan.pt")
@@ -29,16 +50,24 @@ def save_kan_checkpoint(model_u, model_k, cfg_u: Dict[str, Any], cfg_k: Dict[str
         json.dump(meta, f)
     return ckpt_path
 
-def load_kan_checkpoint(kan_cls, ckpt_path: str, device: torch.device):
-    """
-    Reconstruye modelos KAN desde cfg y carga pesos. Devuelve (model_u, model_k, extras)
-    kan_cls: el constructor de KAN, p.ej. from kan import KAN; kan_cls = KAN
+def load_kan_checkpoint(kan_cls: Callable, 
+                       ckpt_path: str, 
+                       device: torch.device) -> Tuple[torch.nn.Module, torch.nn.Module, Dict[str, Any]]:
+    """Load KAN models from checkpoint.
+    
+    Args:
+        kan_cls: KAN constructor class
+        ckpt_path: Path to checkpoint file
+        device: Device to load models on
+        
+    Returns:
+        Tuple of (model_u, model_k, extras_dict)
     """
     ckpt = torch.load(ckpt_path, map_location=device)
     cfg_u = ckpt["cfg_u"]
     cfg_k = ckpt["cfg_k"]
 
-    # Importante: crea los modelos con EXACTA config usada al entrenar
+    # Important: create models with EXACT config used during training
     model_u = kan_cls(**cfg_u).to(device)
     model_k = kan_cls(**cfg_k).to(device)
 

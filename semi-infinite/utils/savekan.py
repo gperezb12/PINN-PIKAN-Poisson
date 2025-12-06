@@ -4,13 +4,29 @@ import json
 import torch
 from typing import Dict, Any
 
-def ensure_dir(path: str):
+def ensure_dir(path: str) -> None:
+    """Create directory if it doesn't exist.
+    
+    Args:
+        path: Directory path to create
+    """
     os.makedirs(path, exist_ok=True)
 
-def save_kan_checkpoint(model_u, model_k, cfg_u: Dict[str, Any], cfg_k: Dict[str, Any],
-                        losses: Dict[str, list], meta: Dict[str, Any], out_dir: str):
-    """
-    Guarda state_dicts + configuración + pérdidas/metadata en un solo checkpoint.
+def save_kan_checkpoint(model_u: torch.nn.Module, model_k: torch.nn.Module, cfg_u: Dict[str, Any], cfg_k: Dict[str, Any],
+                        losses: Dict[str, list], meta: Dict[str, Any], out_dir: str) -> str:
+    """Save KAN model checkpoint with configuration and training history.
+    
+    Args:
+        model_u: Trained model for solution u
+        model_k: Trained model for diffusion coefficient k
+        cfg_u: Configuration dict for model_u
+        cfg_k: Configuration dict for model_k
+        losses: Dictionary of loss histories
+        meta: Metadata dictionary
+        out_dir: Output directory path
+    
+    Returns:
+        Path to saved checkpoint file
     """
     ensure_dir(out_dir)
     ckpt_path = os.path.join(out_dir, "checkpoint_kan.pt")
@@ -29,10 +45,16 @@ def save_kan_checkpoint(model_u, model_k, cfg_u: Dict[str, Any], cfg_k: Dict[str
         json.dump(meta, f)
     return ckpt_path
 
-def load_kan_checkpoint(kan_cls, ckpt_path: str, device: torch.device):
-    """
-    Reconstruye modelos KAN desde cfg y carga pesos. Devuelve (model_u, model_k, extras)
-    kan_cls: el constructor de KAN, p.ej. from kan import KAN; kan_cls = KAN
+def load_kan_checkpoint(kan_cls: type, ckpt_path: str, device: torch.device) -> tuple[torch.nn.Module, torch.nn.Module, Dict[str, Any]]:
+    """Load KAN models from checkpoint.
+    
+    Args:
+        kan_cls: KAN class constructor
+        ckpt_path: Path to checkpoint file
+        device: Device to load models on
+    
+    Returns:
+        Tuple of (model_u, model_k, extras) where extras contains losses and metadata
     """
     ckpt = torch.load(ckpt_path, map_location=device)
     cfg_u = ckpt["cfg_u"]

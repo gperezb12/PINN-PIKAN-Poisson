@@ -4,7 +4,17 @@ import seaborn as sns
 import os
 import torch
 
-def plot_solution_and_k(modelU, modelK, epoch, folder="figs_inverse_mixed", n_points=250, device='cuda'):
+def plot_solution_and_k(modelU: torch.nn.Module, modelK: torch.nn.Module, epoch: int, folder: str = "figs_inverse_mixed", n_points: int = 250, device: str = 'cuda') -> None:
+    """Plot solution u and diffusion coefficient k predictions.
+    
+    Args:
+        modelU: Model predicting solution u
+        modelK: Model predicting diffusion coefficient k
+        epoch: Current training epoch
+        folder: Output folder for saved plots
+        n_points: Number of grid points per dimension
+        device: Device to run computation on
+    """
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -52,17 +62,29 @@ def plot_solution_and_k(modelU, modelK, epoch, folder="figs_inverse_mixed", n_po
     plt.close(fig)
     """
 
-def plot_styled_waves(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg", epoch=0):
-    """Create a plot with the defined style"""
-    # Set the font to Computer Modern
+def plot_styled_waves(X: np.ndarray, Y: np.ndarray, Z: np.ndarray, title: str = "Aqui va el titulo", saveas: str = "figure.svg", epoch: int = 0) -> tuple[plt.Figure, plt.Axes]:
+    """Create styled wave solution plot.
+    
+    Args:
+        X: X-coordinate meshgrid
+        Y: Y-coordinate meshgrid
+        Z: Solution values
+        title: Plot title
+        saveas: Output file path
+        epoch: Training epoch number
+    
+    Returns:
+        Tuple of (figure, axes)
     """
+    # Set the font to Computer Modern
+    
     plt.rcParams.update({
         "mathtext.fontset": "cm",
         "font.family": "serif",
         "mathtext.rm": "serif",
         "font.size": 14
     })
-    """
+    
     fig, ax = plt.subplots(figsize=(5, 5.75))
     cmap = plt.get_cmap('RdBu')
     
@@ -85,7 +107,7 @@ def plot_styled_waves(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg", e
     for spine in ax.spines.values():
         spine.set_visible(True)
     
-    plt.title(title, pad=10, fontsize=16)
+    plt.title(title, pad=15, fontsize=22)
     os.makedirs(os.path.dirname(saveas), exist_ok=True)
 
     plt.savefig(saveas)
@@ -93,18 +115,30 @@ def plot_styled_waves(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg", e
 
     return fig, ax
 
-def plot_styled_k(X, Y, Z, title="Aqui va el titulo",saveas="figure.svg" ,epoch=0):
-    """Create a plot with the defined style"""
+def plot_styled_k(X: np.ndarray, Y: np.ndarray, Z: np.ndarray, title: str = "Aqui va el titulo", saveas: str = "figure.svg", epoch: int = 0) -> tuple[plt.Figure, plt.Axes]:
+    """Create styled diffusion coefficient plot.
+    
+    Args:
+        X: X-coordinate meshgrid
+        Y: Y-coordinate meshgrid
+        Z: Diffusion coefficient values
+        title: Plot title
+        saveas: Output file path
+        epoch: Training epoch number
+    
+    Returns:
+        Tuple of (figure, axes)
+    """
     # Set the font to Computer Modern
 
-    """
+    
     plt.rcParams.update({
         "mathtext.fontset": "cm",
         "font.family": "serif",
         "mathtext.rm": "serif",
         "font.size": 14
     })
-    """
+    
     fig, ax = plt.subplots(figsize=(5, 5.75))
     cmap = plt.get_cmap('GnBu')
     
@@ -117,7 +151,7 @@ def plot_styled_k(X, Y, Z, title="Aqui va el titulo",saveas="figure.svg" ,epoch=
     
     # Colorbar
     cbar = plt.colorbar(im, orientation='horizontal', pad=0.07, shrink=1)
-    cbar.set_ticks([vmin, vmax])
+    cbar.set_ticks([vmin, 0, vmax])
     im.set_clim(vmin, vmax)
     
     # Axis formatting
@@ -130,7 +164,7 @@ def plot_styled_k(X, Y, Z, title="Aqui va el titulo",saveas="figure.svg" ,epoch=
     for spine in ax.spines.values():
         spine.set_visible(True)
     
-    plt.title(title, pad=10, fontsize=16)
+    plt.title(title, pad=15, fontsize=22)
     os.makedirs(os.path.dirname(saveas), exist_ok=True)
 
     plt.savefig(saveas)
@@ -139,8 +173,21 @@ def plot_styled_k(X, Y, Z, title="Aqui va el titulo",saveas="figure.svg" ,epoch=
 
 
 
-def plot_styled_error(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg", epoch=0):
-    """Create a plot with the defined style"""
+
+def plot_styled_error(X: np.ndarray, Y: np.ndarray, Z: np.ndarray, title: str = "Aqui va el titulo", saveas: str = "figure.svg", epoch: int = 0) -> tuple[plt.Figure, plt.Axes]:
+    """Create styled error plot.
+    
+    Args:
+        X: X-coordinate meshgrid
+        Y: Y-coordinate meshgrid
+        Z: Error values
+        title: Plot title
+        saveas: Output file path
+        epoch: Training epoch number
+    
+    Returns:
+        Tuple of (figure, axes)
+    """
     # Set the font to Computer Modern
     plt.rcParams.update({
         "mathtext.fontset": "cm",
@@ -150,10 +197,10 @@ def plot_styled_error(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg", e
     })
     
     fig, ax = plt.subplots(figsize=(5, 5.75))
-    cmap = plt.get_cmap('inferno')
+    cmap = plt.get_cmap('PiYG')
     
     vmax = abs(Z).max()
-
+    vmax = 0.1
     im = ax.pcolormesh(X, Y, Z, cmap=cmap, shading='auto', vmin=-vmax, vmax=vmax)
     
     # Colorbar
@@ -171,20 +218,20 @@ def plot_styled_error(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg", e
     for spine in ax.spines.values():
         spine.set_visible(True)
     
-    plt.title(title, pad=10, fontsize=16)
+    plt.title(title, pad=15, fontsize=22)
     plt.savefig(saveas)
     return fig, ax
 
-def plot_linear(x, y, titleofplot, yaxis=None, xaxis=None, epoch=0):
-    """
-    Plot linear data with custom styling.
+def plot_linear(x: np.ndarray, y: np.ndarray, titleofplot: str, yaxis: str = None, xaxis: str = None, epoch: int = 0) -> None:
+    """Plot linear data with custom styling.
     
-    Parameters:
-    x: array-like, x-axis data
-    y: array-like, y-axis data  
-    titleofplot: str, plot title
-    yaxis: str or None, y-axis label (if None, no y-axis label displayed)
-    xaxis: str or None, x-axis label (if None, no x-axis label displayed)
+    Args:
+        x: X-axis data
+        y: Y-axis data
+        titleofplot: Plot title
+        yaxis: Y-axis label (None for no label)
+        xaxis: X-axis label (None for no label)
+        epoch: Training epoch number
     """
     # Set seaborn style first
     sns.set_theme(style="darkgrid")
@@ -211,16 +258,16 @@ def plot_linear(x, y, titleofplot, yaxis=None, xaxis=None, epoch=0):
     
 
 
-def plot_log(x, y, titleofplot, yaxis=None, xaxis=None, epoch=0):
-    """
-    Plot linear data with custom styling.
+def plot_log(x: np.ndarray, y: np.ndarray, titleofplot: str, yaxis: str = None, xaxis: str = None, epoch: int = 0) -> None:
+    """Plot data with log-log scale.
     
-    Parameters:
-    x: array-like, x-axis data
-    y: array-like, y-axis data  
-    titleofplot: str, plot title
-    yaxis: str or None, y-axis label (if None, no y-axis label displayed)
-    xaxis: str or None, x-axis label (if None, no x-axis label displayed)
+    Args:
+        x: X-axis data
+        y: Y-axis data
+        titleofplot: Plot title
+        yaxis: Y-axis label (None for no label)
+        xaxis: X-axis label (None for no label)
+        epoch: Training epoch number
     """
     # Set seaborn style first
     sns.set_theme(style="darkgrid")
@@ -248,8 +295,20 @@ def plot_log(x, y, titleofplot, yaxis=None, xaxis=None, epoch=0):
     
 
 
-def plot_styled_waves_sq(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg", epoch=0):
-    """Create a plot with the defined style"""
+def plot_styled_waves_sq(X: np.ndarray, Y: np.ndarray, Z: np.ndarray, title: str = "Aqui va el titulo", saveas: str = "figure.svg", epoch: int = 0) -> tuple[plt.Figure, plt.Axes]:
+    """Create styled wave solution plot with domain boundary overlay.
+    
+    Args:
+        X: X-coordinate meshgrid
+        Y: Y-coordinate meshgrid
+        Z: Solution values
+        title: Plot title
+        saveas: Output file path
+        epoch: Training epoch number
+    
+    Returns:
+        Tuple of (figure, axes)
+    """
     # Set the font to Computer Modern
     plt.rcParams.update({
         "mathtext.fontset": "cm",
@@ -295,8 +354,20 @@ def plot_styled_waves_sq(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg"
     return fig, ax
 
 
-def plot_styled_k_sq(X, Y, Z, title="Aqui va el titulo", saveas="figure.svg", epoch=0):
-    """Create a plot with the defined style"""
+def plot_styled_k_sq(X: np.ndarray, Y: np.ndarray, Z: np.ndarray, title: str = "Aqui va el titulo", saveas: str = "figure.svg", epoch: int = 0) -> tuple[plt.Figure, plt.Axes]:
+    """Create styled diffusion coefficient plot with domain boundary overlay.
+    
+    Args:
+        X: X-coordinate meshgrid
+        Y: Y-coordinate meshgrid
+        Z: Diffusion coefficient values
+        title: Plot title
+        saveas: Output file path
+        epoch: Training epoch number
+    
+    Returns:
+        Tuple of (figure, axes)
+    """
     # Set the font to Computer Modern
     plt.rcParams.update({
         "mathtext.fontset": "cm",

@@ -1,23 +1,57 @@
 
 import torch
 from tqdm import tqdm
+from typing import Callable, Tuple, List, Dict, Any
 from utils.loss_functions import loss_bc, loss_data_k, loss_data_u, loss_pde_inverse
 from utils.styled_plots import plot_solution_and_k
+import yaml
 
+def load_config(config_path: str = 'config.yml') -> Dict[str, Any]:
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+    
 def train_inverse_pinn_mixed(
-    modelU, modelK,
-    X_int, X_bnd, 
-    X_data, u_data, k_data,
-    adam_epochs=10000,
-    lbfgs_iterations=500,
-    lr_adam=1e-3,
-    lr_lbfgs=0.5,
-    lambda_bc=5.0, 
-    lambda_data=1.0,
-    plot_every=1000,
-    plot_every_lbfgs = 100
-):
+    modelU: torch.nn.Module, 
+    modelK: torch.nn.Module,
+    X_int: torch.Tensor, 
+    X_bnd: torch.Tensor, 
+    X_data: torch.Tensor, 
+    u_data: torch.Tensor, 
+    k_data: torch.Tensor,
+    adam_epochs: int = 10000,
+    lbfgs_iterations: int = 500,
+    lr_adam: float = 1e-3,
+    lr_lbfgs: float = 0.5,
+    lambda_bc: float = 5.0, 
+    lambda_pde : float = 5.0, 
+    lambda_data: float = 1.0,
+    plot_every: int = 1000,
+    plot_every_lbfgs: int = 100
+) -> Tuple[torch.nn.Module, torch.nn.Module, List[float], List[float]]:
+    """Train inverse PINN with mixed data using Adam and L-BFGS optimizers.
+    
+    Args:
+        modelU: Neural network model for u
+        modelK: Neural network model for k
+        X_int: Interior collocation points
+        X_bnd: Boundary points
+        X_data: Data points
+        u_data: Target u values at data points
+        k_data: Target k values at data points
+        adam_epochs: Number of Adam optimization epochs
+        lbfgs_iterations: Number of L-BFGS iterations
+        lr_adam: Learning rate for Adam
+        lr_lbfgs: Learning rate for L-BFGS
+        lambda_bc: Weight for boundary condition loss
+        lambda_data: Weight for data loss
+        plot_every: Plot frequency during Adam training
+        plot_every_lbfgs: Plot frequency during L-BFGS training
+        
+    Returns:
+        Tuple of (trained_modelU, trained_modelK, adam_losses, lbfgs_losses)
+    """
     # Lists to store losses
+    cfg = load_config()
     adam_loss_history = []
     lbfgs_loss_history = []
 
@@ -30,7 +64,7 @@ def train_inverse_pinn_mixed(
         data_loss_val_u = loss_data_u(modelU, X_data, u_data)
         data_loss_val_k = loss_data_k(modelK, X_data, k_data)
 
-        total_loss = pde_loss + lambda_data * data_loss_val_u + lambda_data * data_loss_val_k
+        total_loss = lambda_pde * pde_loss + lambda_data * data_loss_val_u + lambda_data * data_loss_val_k
         total_loss.backward()
         optimizer_adam.step()
 
@@ -40,7 +74,7 @@ def train_inverse_pinn_mixed(
                   f"pde_loss={pde_loss.item():.4e}, "
                   f"data_loss={data_loss_val_u.item():.4e},"
                   f"data_loss_k={data_loss_val_k.item():.4e}")
-            plot_solution_and_k(modelU, modelK, epoch, folder="figs_inverse_gpb")
+            plot_solution_and_k(modelU, modelK, epoch, folder="figs_inverse_gpb", device=cfg['device'])
 
     print(">>> FASE 2: Entrenamiento con L-BFGS <<<")
     optimizer_lbfgs = torch.optim.LBFGS(
@@ -73,7 +107,7 @@ def train_inverse_pinn_mixed(
                   f"pde_loss={current_pde:.4e}, "
                   f"data_loss_u={current_data_u:.4e},"
                   f"data_loss_k={current_data_k:.4e}")
-            plot_solution_and_k(modelU, modelK, adam_epochs + i + 1, folder="figs_inverse_gpb")
+            plot_solution_and_k(modelU, modelK, adam_epochs + i + 1, folder="figs_inverse_gpb",device=cfg['device'])
 
     return modelU, modelK, adam_loss_history, lbfgs_loss_history
 

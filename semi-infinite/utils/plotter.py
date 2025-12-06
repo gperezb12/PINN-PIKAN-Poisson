@@ -1,5 +1,14 @@
 
-def plot_solution_and_k(modelU, modelK, epoch, folder="figs_inverse_mixed", n_points=150):
+def plot_solution_and_k(modelU: torch.nn.Module, modelK: torch.nn.Module, epoch: int, folder: str = "figs_inverse_mixed", n_points: int = 150) -> None:
+    """Plot solution u and diffusion coefficient k predictions.
+    
+    Args:
+        modelU: Model predicting solution u
+        modelK: Model predicting diffusion coefficient k
+        epoch: Current training epoch
+        folder: Output folder for saved plots
+        n_points: Number of grid points per dimension
+    """
     if not os.path.exists(folder):
         os.makedirs(folder)
 

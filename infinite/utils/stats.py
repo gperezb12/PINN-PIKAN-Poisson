@@ -1,22 +1,22 @@
 import torch
 import numpy as np
+from typing import Callable
 
 
-def relative_error_analytic(model_u, model_k, n_points=200, device='cuda'):
-    """
-    Computes the relative percentage error between model predictions and ground truth for u and k.
+def relative_error_analytic(model_u: Callable[[torch.Tensor], torch.Tensor], 
+                           model_k: Callable[[torch.Tensor], torch.Tensor], 
+                           n_points: int = 200, 
+                           device: str = 'cuda') -> float:
+    """Compute relative percentage error between model predictions and ground truth.
     
     Args:
-        model_u (torch.nn.Module): Trained model predicting u(x, y).
-        model_k (torch.nn.Module): Trained model predicting k(x, y).
-        alpha (float): Parameter in the analytic solution of u.
-        beta (float): Parameter in the analytic solution of u.
-        epsilon (float): Parameter in the analytic solution of k.
-        n_points (int): Number of grid points in each dimension.
-        device (str): 'cpu' or 'cuda'.
+        model_u: Trained model predicting u(x, y)
+        model_k: Trained model predicting k(x, y)
+        n_points: Number of grid points in each dimension
+        device: Device to run computations on
 
     Returns:
-        Tuple of relative percentage errors for u and k: (rel_error_u, rel_error_k)
+        Relative percentage error for k
     """
     alpha = 0.5
     beta = 10

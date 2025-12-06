@@ -1,0 +1,46 @@
+# Model type: 'pinn' or 'pikan'
+model_type: 'pinn'
+
+# Random seed
+seed: 32
+
+# Device configuration
+device: 'cpu'  # 'cuda' or 'cpu'
+
+# Data generation
+data:
+  N_interior: 10000
+  N_boundary: 500
+  N_data: 10000
+
+# Network architecture
+network:
+  input_size: 2
+  output_size: 1
+  
+  # For PINN (MLP)
+  pinn:
+    hidden_layers: 16
+    hidden_units: 32
+    activation: 'tanh'  # 'tanh', 'relu', 'sigmoid'
+  
+  # For PIKAN (KAN)
+  pikan:
+    width: [2, 6,6,6, 1]
+
+# Training parameters
+training:
+  adam_epochs: 15000
+  lbfgs_iterations: 1500
+  lr_adam: 1.0e-4
+  lr_lbfgs: 0.5
+  lambda_bc: 1
+  lambda_data: 100
+  lambda_pde: 1
+  plot_every: 5000
+  plot_every_lbfgs: 500
+
+# Output configuration
+output:
+  results_dir: 'results_kan'  # 'results' for pinn, 'results_kan' for pikan
+  conf_suffix: '(sufx)'  # Configuration identifier for filenames

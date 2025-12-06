@@ -1,8 +1,21 @@
 import torch
 from torch.autograd import grad
+from typing import Callable
 
 
-def loss_pde_inverse(model_u, model_k, X_int):
+def loss_pde_inverse(model_u: Callable[[torch.Tensor], torch.Tensor], 
+                     model_k: Callable[[torch.Tensor], torch.Tensor], 
+                     X_int: torch.Tensor) -> torch.Tensor:
+    """Compute PDE residual loss for inverse problem.
+    
+    Args:
+        model_u: Neural network model for u(x,y)
+        model_k: Neural network model for k(x,y) 
+        X_int: Interior collocation points
+        
+    Returns:
+        Mean squared PDE residual loss
+    """
     u = model_u(X_int)
     k = model_k(X_int)
 
@@ -33,19 +46,20 @@ def loss_pde_inverse(model_u, model_k, X_int):
     residual = k*(u_xx + u_yy) + (k_x * u_x + k_y * u_y) - forcing
     return torch.mean(residual**2)
 
-def loss_bc(model, X_bnd, alpha=0.25, beta=7.5):
-    """
-    Calcula el MSE entre la predicciÃ³n del modelo y la condiciÃ³n de frontera
-    u(x,0) = exp(-alpha * x^2) * cos(beta * x).
-
+def loss_bc(model: Callable[[torch.Tensor], torch.Tensor], 
+            X_bnd: torch.Tensor, 
+            alpha: float = 0.25, 
+            beta: float = 7.5) -> torch.Tensor:
+    """Compute boundary condition loss.
+    
     Args:
-        model: Red neuronal.
-        X_bnd (torch.Tensor): Puntos sobre la frontera y=0.
-        alpha (float): ParÃ¡metro alpha.
-        beta (float): ParÃ¡metro beta.
-
+        model: Neural network model
+        X_bnd: Boundary points where y=0
+        alpha: Parameter alpha in boundary condition
+        beta: Parameter beta in boundary condition
+        
     Returns:
-        MSE (torch.Tensor)
+        Mean squared error between prediction and boundary condition
     """ 
     x = X_bnd[:, 0:1]  # Solo la coordenada x, ya que y = 0
     u_true = 5.0*torch.exp(-alpha * x**2) * torch.cos(beta * x)
@@ -53,11 +67,35 @@ def loss_bc(model, X_bnd, alpha=0.25, beta=7.5):
 
     return torch.mean((u_pred - u_true) ** 2)
 
-def loss_data_u(model, X_data, u_data):
+def loss_data_u(model: Callable[[torch.Tensor], torch.Tensor], 
+               X_data: torch.Tensor, 
+               u_data: torch.Tensor) -> torch.Tensor:
+    """Compute data loss for u predictions.
+    
+    Args:
+        model: Neural network model for u
+        X_data: Input data points
+        u_data: Target u values
+        
+    Returns:
+        Mean squared error between predictions and data
+    """
     u_pred = model(X_data)
     return torch.mean((u_pred - u_data)**2)
 
-def loss_data_k(model, X_data, k_data):
+def loss_data_k(model: Callable[[torch.Tensor], torch.Tensor], 
+               X_data: torch.Tensor, 
+               k_data: torch.Tensor) -> torch.Tensor:
+    """Compute data loss for k predictions.
+    
+    Args:
+        model: Neural network model for k
+        X_data: Input data points  
+        k_data: Target k values
+        
+    Returns:
+        Mean squared error between predictions and data
+    """
     k_pred = model(X_data)
     return torch.mean((k_pred - k_data)**2)
 

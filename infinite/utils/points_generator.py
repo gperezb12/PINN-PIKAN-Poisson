@@ -1,10 +1,19 @@
 
 import numpy as np
 import torch
+from typing import Tuple
 
 
-
-def generate_interior_data(N_data=100, device='cuda'):
+def generate_interior_data(N_data: int = 100, device: str = 'cuda') -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Generate interior data points with analytical solutions.
+    
+    Args:
+        N_data: Number of data points to generate
+        device: Device to place tensors on
+        
+    Returns:
+        Tuple of (X_data, u_data, k_data) tensors
+    """
     x_data = np.random.normal(loc=0.0, scale=2, size=(N_data, 1))
     y_data = np.random.normal(loc=0.0, scale=2, size=(N_data, 1))
     X_data_np = np.hstack((x_data, y_data))
@@ -31,22 +40,25 @@ def generate_interior_data(N_data=100, device='cuda'):
     
     return X_data, u_data, k_data
 
-def generate_collocation_points(N_interior=2000, N_boundary=200, std_dev=2.5, device='cuda'):
-    """
-    Genera puntos de entrenamiento: interior (para el residual de la PDE)
-    y frontera (para la condiciÃ³n de frontera u=0), en el dominio [-3,3]^2.
-
+def generate_collocation_points(N_interior: int = 2000, 
+                               N_boundary: int = 200, 
+                               std_dev: float = 2.5, 
+                               device: str = 'cuda') -> Tuple[torch.Tensor, torch.Tensor]:
+    """Generate collocation points for training.
+    
     Args:
-        N_interior (int): NÃºmero de puntos interiores.
-        N_boundary (int): NÃºmero de puntos en la frontera (y=0).
-
+        N_interior: Number of interior points for PDE residual
+        N_boundary: Number of boundary points (y=0)
+        std_dev: Standard deviation for normal distribution
+        device: Device to place tensors on
+        
     Returns:
-        (X_int, X_bnd) en formato (torch.Tensor, torch.Tensor).
+        Tuple of (X_int, X_bnd) tensors
     """
     # Puntos interiores en [-3,3]x[-3,3]
     x_int = np.random.normal(loc=0.0, scale=2.5, size=(N_interior, 1))
     y_int = np.random.normal(loc=0.0, scale=2.5, size=(N_interior, 1))
-    #y_int = np.clip(y_int, -100000, -0.01)  # fuerza a estar bajo el eje x
+    # y_int = np.clip(y_int, -100000, -0.01)  # force to be below x-axis
 
     X_int = np.hstack((x_int, y_int))  # (N_interior,2)
     X_int = torch.tensor(X_int, dtype=torch.float32, requires_grad=True,device=device)
