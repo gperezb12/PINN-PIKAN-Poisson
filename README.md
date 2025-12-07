@@ -15,6 +15,49 @@ The repository contains implementations for two domain types:
 - `infinite/` - Infinite domain problems
 - `semi-infinite/` - Semi-infinite domain problems
 
+## Problem Formulation
+
+### Infinite Domain
+
+Solves the inverse Poisson equation on the entire 2D plane:
+
+```
+∇·(k(x,y)∇u(x,y)) = f(x,y)    in ℝ²
+```
+
+where:
+- `u(x,y)` is the solution field (unknown)
+- `k(x,y)` is the spatially-varying diffusion coefficient (unknown)
+- `f(x,y)` is the known forcing term
+
+Analytical solution used for validation:
+```
+u(x,y) = exp(-α(x² + y²)) cos(βy)
+k(x,y) = 1 + 2/(1 + exp(-y/ε))
+```
+with α = 0.5, β = 10, ε = 1.
+
+### Semi-Infinite Domain
+
+Solves the inverse Poisson equation on the lower half-plane:
+
+```
+∇·(k(x,y)∇u(x,y)) = f(x,y)    in {(x,y) : y ≤ 0}
+u(x,0) = exp(-αx²) cos(βx)     on y = 0 (boundary condition)
+```
+
+where:
+- `u(x,y)` is the solution field (unknown)
+- `k(x,y)` is the spatially-varying diffusion coefficient (unknown)
+- `f(x,y)` is the known forcing term
+
+Analytical solution used for validation:
+```
+u(x,y) = exp(-α(x² + y²)) cos(βx)
+k(x,y) = 1 + 2/(1 + exp(-(y + 1.5)/ε))
+```
+with α = 0.5, β = 10, ε = 0.75.
+
 ## Installation
 
 ```bash
