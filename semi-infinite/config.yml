@@ -27,6 +27,8 @@ network:
   # For PIKAN (KAN)
   pikan:
     width: [2, 6,6,6, 1]
+    grid: 5
+    k: 3
 
 # Training parameters
 training:

@@ -94,8 +94,8 @@ def create_pinn_models(cfg: Dict[str, Any], device: torch.device):
 
 
 def create_pikan_models(cfg: Dict[str, Any], device: torch.device):
-    model_u = KAN(width=cfg['network']['pikan']['width']).to(device)
-    model_k = KAN(width=cfg['network']['pikan']['width']).to(device)
+    model_u = KAN(width=cfg['network']['pikan']['width'], grid=cfg['network']['pikan']['grid'], k=cfg['network']['pikan']['k']).to(device)
+    model_k = KAN(width=cfg['network']['pikan']['width'], grid=cfg['network']['pikan']['grid'], k=cfg['network']['pikan']['k']).to(device)
     model_u.apply(init_weights)
     model_k.apply(init_weights)
     return model_u, model_k
