@@ -1,6 +1,6 @@
 import torch
 from torch.autograd import grad
-from typing import Callable
+from typing import Callable, Iterable
 
 
 def loss_pde_inverse(model_u: Callable[[torch.Tensor], torch.Tensor], 
@@ -38,7 +38,7 @@ def loss_pde_inverse(model_u: Callable[[torch.Tensor], torch.Tensor],
     exp = torch.exp
     cos = torch.cos
     sqrt = torch.sqrt
-    alpha = 0.5
+    alpha = 0.25
     beta = 10
     epsilon = 1
     forcing = (epsilon*(exp(y/epsilon) + 1)*(3*exp(y/epsilon) + 1)*(4*alpha**2*x**2*cos(beta*y) + 4*alpha**2*y**2*cos(beta*y) + 4*alpha*beta*y*sin(beta*y) - 4*alpha*cos(beta*y) - beta**2*cos(beta*y))*exp(alpha*(x**2 + y**2)) - 2*(2*alpha*y*cos(beta*y) + beta*sin(beta*y))*exp((alpha*epsilon*(x**2 + y**2) + y)/epsilon))*exp(-2*alpha*(x**2 + y**2))/(epsilon*(exp(y/epsilon) + 1)**2)
@@ -108,3 +108,46 @@ def derivative(dy: torch.Tensor, x: torch.Tensor, order: int = 1) -> torch.Tenso
             retain_graph=True
         )[0]
     return dy
+
+def regularization_loss(models: Iterable[torch.nn.Module], 
+                        lambda_l1: float = 0.0, 
+                        lambda_l2: float = 0.0) -> torch.Tensor:
+    """Compute combined L1 and L2 regularization loss.
+    
+    Args:
+        models: Iterable of models to regularize
+        lambda_l1: L1 regularization weight
+        lambda_l2: L2 regularization weight
+        
+    Returns:
+        Scalar regularization loss tensor
+    """
+    models = list(models)
+    device = None
+    dtype = None
+    for model in models:
+        for param in model.parameters():
+            device = param.device
+            dtype = param.dtype
+            break
+        if device is not None:
+            break
+    if device is None:
+        return torch.tensor(0.0)
+
+    reg = torch.zeros((), device=device, dtype=dtype)
+    if lambda_l1 == 0.0 and lambda_l2 == 0.0:
+        return reg
+
+    l1_term = torch.zeros_like(reg)
+    l2_term = torch.zeros_like(reg)
+    for model in models:
+        for param in model.parameters():
+            if not param.requires_grad:
+                continue
+            if lambda_l1 != 0.0:
+                l1_term = l1_term + param.abs().sum()
+            if lambda_l2 != 0.0:
+                l2_term = l2_term + param.pow(2).sum()
+
+    return lambda_l1 * l1_term + lambda_l2 * l2_term

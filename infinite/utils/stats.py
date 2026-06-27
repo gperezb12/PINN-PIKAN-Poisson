@@ -18,7 +18,7 @@ def relative_error_analytic(model_u: Callable[[torch.Tensor], torch.Tensor],
     Returns:
         Relative percentage error for k
     """
-    alpha = 0.5
+    alpha = 0.25
     beta = 10
     epsilon = 1
     # Crear la malla

@@ -19,7 +19,7 @@ def generate_interior_data(N_data: int = 100, device: str = 'cuda') -> Tuple[tor
     X_data_np = np.hstack((x_data, y_data))
     
     # Solución analítica
-    alpha = 0.5
+    alpha = 0.25
     beta = 10
     epsilon = 1
     

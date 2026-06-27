@@ -135,6 +135,8 @@ def main():
         lambda_bc=cfg['training']['lambda_bc'],
         lambda_pde=cfg['training']['lambda_pde'],
         lambda_data=cfg['training']['lambda_data'],
+        lambda_l1=cfg['training'].get('lambda_l1', 0.0),
+        lambda_l2=cfg['training'].get('lambda_l2', 0.0),
         plot_every=cfg['training']['plot_every'],
         plot_every_lbfgs=cfg['training']['plot_every_lbfgs']
     )

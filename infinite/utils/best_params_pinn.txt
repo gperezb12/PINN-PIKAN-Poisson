@@ -1,0 +1,12 @@
+trial 33 with value: 0.11330986778176055.
+Best objective value: 0.11330986778176055
+Best params:
+  hidden_layers: 18
+  hidden_units: 128
+  activation: tanh
+  lr_adam: 6.545682261419958e-05
+  lr_lbfgs: 0.013469398771979493
+  lambda_data: 579.8349518071875
+  lambda_pde: 0.26039724051334473
+  lambda_l1: 1.1693615072304626e-07
+  lambda_l2: 2.150347578706856e-06

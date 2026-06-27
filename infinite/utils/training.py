@@ -2,7 +2,7 @@
 import torch
 from tqdm import tqdm
 from typing import Callable, Tuple, List, Dict, Any
-from utils.loss_functions import loss_bc, loss_data_k, loss_data_u, loss_pde_inverse
+from utils.loss_functions import loss_bc, loss_data_k, loss_data_u, loss_pde_inverse, regularization_loss
 from utils.styled_plots import plot_solution_and_k
 import yaml
 
@@ -25,6 +25,9 @@ def train_inverse_pinn_mixed(
     lambda_bc: float = 5.0, 
     lambda_pde : float = 5.0, 
     lambda_data: float = 1.0,
+    lambda_l1: float = 0.0,
+    lambda_l2: float = 0.0,
+    enable_plots: bool = True,
     plot_every: int = 1000,
     plot_every_lbfgs: int = 100
 ) -> Tuple[torch.nn.Module, torch.nn.Module, List[float], List[float]]:
@@ -44,6 +47,9 @@ def train_inverse_pinn_mixed(
         lr_lbfgs: Learning rate for L-BFGS
         lambda_bc: Weight for boundary condition loss
         lambda_data: Weight for data loss
+        lambda_l1: Weight for L1 regularization
+        lambda_l2: Weight for L2 regularization
+        enable_plots: Whether to generate plots during training
         plot_every: Plot frequency during Adam training
         plot_every_lbfgs: Plot frequency during L-BFGS training
         
@@ -54,6 +60,16 @@ def train_inverse_pinn_mixed(
     cfg = load_config()
     adam_loss_history = []
     lbfgs_loss_history = []
+    def _as_float(value: Any, name: str) -> float:
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError as exc:
+                raise ValueError(f"{name} must be numeric, got {value!r}") from exc
+        return float(value)
+
+    lambda_l1 = _as_float(lambda_l1, "lambda_l1")
+    lambda_l2 = _as_float(lambda_l2, "lambda_l2")
 
     optimizer_adam = torch.optim.Adam(list(modelU.parameters()) + list(modelK.parameters()), lr=lr_adam)
     print(">>> FASE 1: Entrenamiento con Adam <<<")
@@ -63,8 +79,14 @@ def train_inverse_pinn_mixed(
         pde_loss = loss_pde_inverse(modelU, modelK, X_int)
         data_loss_val_u = loss_data_u(modelU, X_data, u_data)
         data_loss_val_k = loss_data_k(modelK, X_data, k_data)
+        reg_loss = regularization_loss([modelU, modelK], lambda_l1=lambda_l1, lambda_l2=lambda_l2)
 
-        total_loss = lambda_pde * pde_loss + lambda_data * data_loss_val_u + lambda_data * data_loss_val_k
+        total_loss = (
+            lambda_pde * pde_loss
+            + lambda_data * data_loss_val_u
+            + lambda_data * data_loss_val_k
+            + reg_loss
+        )
         total_loss.backward()
         optimizer_adam.step()
 
@@ -73,8 +95,10 @@ def train_inverse_pinn_mixed(
             print(f"  [Adam epoch {epoch:5d}] total_loss={total_loss.item():.4e}, "
                   f"pde_loss={pde_loss.item():.4e}, "
                   f"data_loss={data_loss_val_u.item():.4e},"
-                  f"data_loss_k={data_loss_val_k.item():.4e}")
-            plot_solution_and_k(modelU, modelK, epoch, folder="figs_inverse_gpb", device=cfg['device'])
+                  f"data_loss_k={data_loss_val_k.item():.4e},"
+                  f"reg_loss={reg_loss.item():.4e}")
+            if enable_plots:
+                plot_solution_and_k(modelU, modelK, epoch, folder="figs_inverse_gpb", device=cfg['device'])
 
     print(">>> FASE 2: Entrenamiento con L-BFGS <<<")
     optimizer_lbfgs = torch.optim.LBFGS(
@@ -90,8 +114,14 @@ def train_inverse_pinn_mixed(
         pde_loss = loss_pde_inverse(modelU, modelK, X_int)
         data_loss_val_u = loss_data_u(modelU, X_data, u_data)
         data_loss_val_k = loss_data_k(modelK, X_data, k_data)
+        reg_loss = regularization_loss([modelU, modelK], lambda_l1=lambda_l1, lambda_l2=lambda_l2)
 
-        total_loss = pde_loss + lambda_data * data_loss_val_u + lambda_data * data_loss_val_k
+        total_loss = (
+            pde_loss
+            + lambda_data * data_loss_val_u
+            + lambda_data * data_loss_val_k
+            + reg_loss
+        )
         total_loss.backward()
         return total_loss
 
@@ -100,14 +130,16 @@ def train_inverse_pinn_mixed(
         current_pde = loss_pde_inverse(modelU, modelK, X_int).item()
         current_data_u = loss_data_u(modelU, X_data, u_data).item()
         current_data_k = loss_data_k(modelK, X_data, k_data).item()
-        current_total = current_pde + lambda_data * current_data_u + lambda_data * current_data_k
+        current_reg = regularization_loss([modelU, modelK], lambda_l1=lambda_l1, lambda_l2=lambda_l2).item()
+        current_total = current_pde + lambda_data * current_data_u + lambda_data * current_data_k + current_reg
         if (i+1) % plot_every_lbfgs == 0 or (i+1) == lbfgs_iterations:
             lbfgs_loss_history.append(current_total)
             print(f"  [LBFGS iter {i+1:5d}] total_loss={current_total:.4e}, "
                   f"pde_loss={current_pde:.4e}, "
                   f"data_loss_u={current_data_u:.4e},"
-                  f"data_loss_k={current_data_k:.4e}")
-            plot_solution_and_k(modelU, modelK, adam_epochs + i + 1, folder="figs_inverse_gpb",device=cfg['device'])
+                  f"data_loss_k={current_data_k:.4e},"
+                  f"reg_loss={current_reg:.4e}")
+            if enable_plots:
+                plot_solution_and_k(modelU, modelK, adam_epochs + i + 1, folder="figs_inverse_gpb",device=cfg['device'])
 
     return modelU, modelK, adam_loss_history, lbfgs_loss_history
-

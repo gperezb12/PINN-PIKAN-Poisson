@@ -20,8 +20,8 @@ network:
   
   # For PINN (MLP)
   pinn:
-    hidden_layers: 16
-    hidden_units: 32
+    hidden_layers: 18
+    hidden_units: 128
     activation: 'tanh'  # 'tanh', 'relu', 'sigmoid'
   
   # For PIKAN (KAN)
@@ -32,17 +32,57 @@ network:
 
 # Training parameters
 training:
-  adam_epochs: 15000
+  adam_epochs: 25000
   lbfgs_iterations: 15000
-  lr_adam: 1.0e-4
-  lr_lbfgs: 0.5
+  lr_adam: 6.545682261419958e-05
+  lr_lbfgs: 0.013469398771979493
   lambda_bc: 1
-  lambda_data: 100
-  lambda_pde: 1
-  plot_every: 5
-  plot_every_lbfgs: 500
+  lambda_data: 579.8349518071875
+  lambda_pde: 0.26039724051334473
+  lambda_l1: 1.1693615072304626e-07
+  lambda_l2: 2.150347578706856e-06
+  plot_every: 1000
+  plot_every_lbfgs: 100
 
 # Output configuration
 output:
-  results_dir: 'results_kan'  # 'results' for pinn, 'results_kan' for pikan
-  conf_suffix: '(2,4)'  # Configuration identifier for filenames
+  results_dir: 'results'  # 'results' for pinn, 'results_kan' for pikan
+  conf_suffix: 'poisson_optuna_params'  # Configuration identifier for filenames
+
+# Optuna hyperparameter optimization (used by optuna_pinn.py)
+optuna:
+  n_trials: 40
+  timeout: null
+  study_name: 'pinn_optuna'
+  storage: null  # e.g. 'sqlite:///optuna_pinn.db'
+  sampler_seed: 32
+  n_startup_trials: 5
+  n_warmup_steps: 0
+
+  # Smaller data/epochs for faster HPO (override if needed)
+  N_interior: 5000
+  N_boundary: 200
+  N_data: 2000
+  adam_epochs: 5000
+  lbfgs_iterations: 500
+  eval_points: 60
+  plot_every: 2000
+  plot_every_lbfgs: 500
+
+  # Search space
+  hidden_layers_min: 2
+  hidden_layers_max: 32
+  hidden_units: [16, 32, 64, 128]
+  activations: ['tanh', 'relu']
+  lr_adam_min: 1.0e-5
+  lr_adam_max: 1.0e-3
+  lr_lbfgs_min: 1.0e-2
+  lr_lbfgs_max: 1.0
+  lambda_data_min: 1.0
+  lambda_data_max: 1.0e3
+  lambda_pde_min: 1.0e-1
+  lambda_pde_max: 1.0e1
+  lambda_l1_min: 1.0e-9
+  lambda_l1_max: 1.0e-6
+  lambda_l2_min: 1.0e-8
+  lambda_l2_max: 1.0e-4
